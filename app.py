@@ -82,6 +82,16 @@ def login():
         return render_template('login.html')
 
 
+@app.route('/add', methods=['GET', 'POST'])
+def add():
+    if request.method == 'POST':
+        num1 = request.form['num1']
+        num2 = request.form['num2']
+        sum = int(num1) + int(num2)
+        return render_template('add.html', sum=str(sum))
+    return render_template('add.html')
+
+
 @app.errorhandler(404)
 def not_found(e):
     return render_template('404.html')
