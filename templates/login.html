@@ -7,9 +7,11 @@
 <body>
 <h1>Login</h1>
 
-<form action="/login" method="post">
-    <input type="text" name="username">
-    <input type="password" name="password">
+<form method="post">
+    Username: {{ form.username }}
+    <br>
+    Password: {{ form.password }}
+    <br>
     <input type="submit">
 </form>
 

@@ -1,5 +1,12 @@
+# coding=utf-8
+
 from flask import Flask, request, url_for, render_template, flash, abort
+
 from models import User
+
+from db import *
+
+from wtforms import Form, StringField, PasswordField, validators
 
 app = Flask(__name__)
 app.secret_key = '123456'
@@ -56,30 +63,22 @@ def query_url():
     return 'query url: ' + url_for('query_user')
 
 
-@app.route('/login')
-def show_message():
-    return render_template('login.html')
+class LoginForm(Form):
+    username = StringField('username', [validators.DataRequired()])
+    password = PasswordField('password', [validators.DataRequired()])
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    form = request.form
-    username = form.get('username')
-    password = form.get('password')
-
-    if not username:
-        flash('please input username')
-        return render_template('login.html')
-    if not password:
-        flash('please input password')
-        return render_template('login.html')
-
-    if username == 'lcy' and password == '123456':
-        flash('login success')
-        return render_template('login.html')
-    else:
-        flash('username or password is wrong')
-        return render_template('login.html')
+    my_form = LoginForm(request.form)
+    if request.method == 'POST':
+        if my_form.validate() and my_form.username.data == 'lcy' and my_form.password.data == '123456':
+            flash('Login success!')
+            return render_template('login.html', form=my_form)
+        else:
+            flash('Login failed!')
+            return render_template('login.html', form=my_form)
+    return render_template('login.html', form=my_form)
 
 
 @app.route('/add', methods=['GET', 'POST'])
