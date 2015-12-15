@@ -72,13 +72,25 @@ class LoginForm(Form):
 def login():
     my_form = LoginForm(request.form)
     if request.method == 'POST':
-        if my_form.validate() and my_form.username.data == 'lcy' and my_form.password.data == '123456':
-            flash('Login success!')
-            return render_template('login.html', form=my_form)
+        if my_form.validate() and is_existed(my_form.username.data, my_form.password.data):
+            return 'Login success!'
         else:
             flash('Login failed!')
             return render_template('login.html', form=my_form)
     return render_template('login.html', form=my_form)
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    my_form = LoginForm(request.form)
+    if request.method == 'POST':
+        if my_form.validate():
+            add_user(my_form.username.data, my_form.password.data)
+            return 'Register success!'
+        else:
+            flash('Register failed!')
+            return render_template('register.html', form=my_form)
+    return render_template('register.html', form=my_form)
 
 
 @app.route('/add', methods=['GET', 'POST'])
