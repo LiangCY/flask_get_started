@@ -1,10 +1,13 @@
 # coding=utf-8
-
 from flask import Flask, request, url_for, render_template, flash, abort
 
 from model import *
 
 from wtforms import Form, StringField, PasswordField, validators, TextAreaField
+
+import base64
+import random
+import time
 
 app = Flask(__name__)
 app.secret_key = '123456'
@@ -126,6 +129,45 @@ def feedback():
             flash('Please input content')
             return render_template('feedback.html', list=entry_list, form=form)
     return render_template('feedback.html', list=entry_list, form=form)
+
+
+users = {
+    'Tom': ['123456']
+}
+
+
+def gen_token(uid):
+    token = base64.b64encode(':'.join([str(uid), str(random.random()), str(time.time() + 7200)]))
+    users[uid].append(token)
+    return token
+
+
+def verify_token(token):
+    _token = base64.b64decode(token)
+    if not users.get(_token.split(':')[0])[-1] == token:
+        return -1
+    if float(_token.split(':')[-1]) >= time.time():
+        return 1
+    else:
+        return 0
+
+
+@app.route('/login1', methods=['GET', 'POST'])
+def login1():
+    uid, pw = base64.b64decode(request.headers['Authorization'].split(' ')[-1]).split(':')
+    if users.get(uid)[0] == pw:
+        return gen_token(uid)
+    else:
+        return 'error'
+
+
+@app.route('/test1', methods=['POST', 'GET'])
+def test():
+    token = request.args.get('token')
+    if verify_token(token) == 1:
+        return 'data'
+    else:
+        return 'error'
 
 
 @app.errorhandler(404)
