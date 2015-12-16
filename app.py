@@ -1,5 +1,5 @@
 # coding=utf-8
-from flask import Flask, request, url_for, render_template, flash, abort
+from flask import Flask, request, url_for, render_template, flash, redirect, abort
 
 from model import *
 
@@ -170,10 +170,51 @@ def test():
         return 'error'
 
 
+auth_code = {}
+redirect_uri = 'http://127.0.0.1:5000/client/passport'
+client_id = '123456'
+users[client_id] = []
+oauth_redirect_uri = []
+
+
+def gen_code(uri):
+    code = random.randint(0, 10000)
+    auth_code[uri] = code
+    return code
+
+
+@app.route('/client/login', methods=['POST', 'GET'])
+def client_login():
+    uri = 'http://127.0.0.1:5000/oauth?response_type=code&client_id=%s&redirect_uri=%s' % (client_id, redirect_uri)
+    return redirect(uri)
+
+
+@app.route('/oauth', methods=['POST', 'GET'])
+def oauth():
+    if request.args.get('user'):
+        if users.get(request.args.get('user'))[0] == request.args.get('pw') and oauth_redirect_uri:
+            uri = oauth_redirect_uri[0] + '?code=%s' % gen_code(oauth_redirect_uri[0])
+            return redirect(uri)
+    if request.args.get('code'):
+        if str(auth_code.get(request.args.get('redirect_uri'))) == request.args.get('code'):
+            return gen_token(request.args.get('client_id'))
+    if request.args.get('redirect_uri'):
+        oauth_redirect_uri.append(request.args.get('redirect_uri'))
+    return 'Please login'
+
+
+@app.route('/client/passport', methods=['POST', 'GET'])
+def passport():
+    code = request.args.get('code')
+    uri = 'http://127.0.0.1:5000/oauth?grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s' % (
+        code, redirect_uri, client_id)
+    return redirect(uri)
+
+
 @app.errorhandler(404)
 def not_found(e):
     return render_template('404.html')
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
