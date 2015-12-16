@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Feedback</title>
+</head>
+<body>
+<h1>Feedback</h1>
+
+<ul>
+    {% for item in list %}
+        <li>{{ item.content }} --send by {{ item.sender }}
+        </li>
+    {% endfor %}
+</ul>
+
+<form method="post">
+    sender: {{ form.sender }}
+    <br>
+    content: {{ form.content }}
+    <br>
+    <input type="submit">
+    <input type="reset">
+</form>
+</body>
+</html>

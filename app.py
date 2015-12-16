@@ -2,11 +2,9 @@
 
 from flask import Flask, request, url_for, render_template, flash, abort
 
-from models import User
+from model import *
 
-from db import *
-
-from wtforms import Form, StringField, PasswordField, validators
+from wtforms import Form, StringField, PasswordField, validators, TextAreaField
 
 app = Flask(__name__)
 app.secret_key = '123456'
@@ -72,10 +70,15 @@ class LoginForm(Form):
 def login():
     my_form = LoginForm(request.form)
     if request.method == 'POST':
-        if my_form.validate() and is_existed(my_form.username.data, my_form.password.data):
-            return 'Login success!'
+        if my_form.validate():
+            user = User(my_form.username.data, my_form.password.data);
+            if user.is_existed() == 1:
+                return 'Login success!'
+            else:
+                flash('Wrong username or password!')
+                return render_template('login.html', form=my_form)
         else:
-            flash('Login failed!')
+            flash('Please input username and password!')
             return render_template('login.html', form=my_form)
     return render_template('login.html', form=my_form)
 
@@ -85,10 +88,11 @@ def register():
     my_form = LoginForm(request.form)
     if request.method == 'POST':
         if my_form.validate():
-            add_user(my_form.username.data, my_form.password.data)
+            user = User(my_form.username.data, my_form.password.data)
+            user.add()
             return 'Register success!'
         else:
-            flash('Register failed!')
+            flash('Please input username and password!')
             return render_template('register.html', form=my_form)
     return render_template('register.html', form=my_form)
 
@@ -101,6 +105,27 @@ def add():
         sum = int(num1) + int(num2)
         return render_template('add.html', sum=str(sum))
     return render_template('add.html')
+
+
+class EntryForm(Form):
+    sender = StringField('sender')
+    content = TextAreaField('content', [validators.DataRequired()])
+
+
+@app.route('/feedback', methods=['GET', 'POST'])
+def feedback():
+    entry_list = get_all_entry()
+    form = EntryForm(request.form)
+    if request.method == 'POST':
+        if form.validate():
+            entry = Entry(form.sender.data, form.content.data)
+            entry.add()
+            entry_list = get_all_entry()
+            return render_template('feedback.html', list=entry_list, form=form)
+        else:
+            flash('Please input content')
+            return render_template('feedback.html', list=entry_list, form=form)
+    return render_template('feedback.html', list=entry_list, form=form)
 
 
 @app.errorhandler(404)
