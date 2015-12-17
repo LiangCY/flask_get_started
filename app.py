@@ -13,8 +13,11 @@ import hmac
 import json
 from datetime import datetime, timedelta
 
+from flask_restful import Resource, Api, fields, marshal_with
+
 app = Flask(__name__)
 app.secret_key = '123456'
+api = Api(app)
 
 
 @app.route('/')
@@ -246,6 +249,7 @@ def passport():
     return redirect(uri)
 
 
+# 资源服务器
 @app.route('/test', methods=['POST', 'GET'])
 def test():
     token = request.args.get('token')
@@ -254,6 +258,37 @@ def test():
         return json.dumps(ret)
     else:
         return 'error'
+
+
+# 数据模型
+class TestData(object):
+    def __init__(self, client_id, expires, salt, user_id):
+        self.client_id = client_id
+        self.expires = expires
+        self.salt = salt
+        self.user_id = user_id
+
+
+# marshal
+resource_fields = {
+    'user': fields.String(attribute='sender', default=''),
+    'content': fields.String(default=''),
+}
+
+
+# 新的资源服务器
+class Test1(Resource):
+    @marshal_with(resource_fields)
+    def get(self):
+        token = request.args.get('token')
+        ret = verify_token(token)
+        if ret:
+            return get_all_entry()
+        else:
+            return 'error'
+
+
+api.add_resource(Test1, '/test1')
 
 
 @app.errorhandler(404)
