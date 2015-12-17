@@ -1,5 +1,6 @@
 # coding=utf-8
-from flask import Flask, request, url_for, render_template, flash, redirect, abort
+
+from flask import Flask, request, url_for, render_template, flash, redirect, abort, make_response
 
 from model import *
 
@@ -8,6 +9,9 @@ from wtforms import Form, StringField, PasswordField, validators, TextAreaField
 import base64
 import random
 import time
+import hmac
+import json
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = '123456'
@@ -135,21 +139,57 @@ users = {
     'Tom': ['123456']
 }
 
+auth_code = {}
+redirect_uri = 'http://127.0.0.1:5000/client/passport'
+client_id = '123456'
+users[client_id] = []
+oauth_redirect_uri = []
 
-def gen_token(uid):
-    token = base64.b64encode(':'.join([str(uid), str(random.random()), str(time.time() + 7200)]))
-    users[uid].append(token)
-    return token
+TIMEOUT = 3600 * 2
+
+
+# 生成授权码
+def gen_code(uri, user_id):
+    code = random.randint(0, 10000)
+    auth_code[uri] = [code, user_id]
+    return code
+
+
+# 生成签名
+def get_signature(value):
+    return hmac.new('secret', value).digest()
+
+
+def encode_token_bytes(data):
+    return base64.urlsafe_b64encode(data)
+
+
+def decode_token_bytes(data):
+    return base64.urlsafe_b64decode(data)
+
+
+def gen_token(data):
+    data = data.copy()
+    if "salt" not in data:
+        data['salt'] = unicode(random.random()).decode('ascii')
+    if 'expires' not in data:
+        data['expires'] = time.time() + TIMEOUT
+    payload = json.dumps(data).encode('utf8')
+    sig = get_signature(payload)
+    return encode_token_bytes(payload + sig)
 
 
 def verify_token(token):
-    _token = base64.b64decode(token)
-    if not users.get(_token.split(':')[0])[-1] == token:
-        return -1
-    if float(_token.split(':')[-1]) >= time.time():
-        return 1
-    else:
-        return 0
+    decoded_token = decode_token_bytes(str(token))
+    payload = decoded_token[:-16]
+    sig = decoded_token[-16:]
+    expected_sig = get_signature(payload)
+    if sig != expected_sig:
+        return {}
+    data = json.loads(payload.decode('utf8'))
+    if data.get('expires') >= time.time():
+        return data
+    return 0
 
 
 @app.route('/login1', methods=['GET', 'POST'])
@@ -161,28 +201,6 @@ def login1():
         return 'error'
 
 
-@app.route('/test1', methods=['POST', 'GET'])
-def test():
-    token = request.args.get('token')
-    if verify_token(token) == 1:
-        return 'data'
-    else:
-        return 'error'
-
-
-auth_code = {}
-redirect_uri = 'http://127.0.0.1:5000/client/passport'
-client_id = '123456'
-users[client_id] = []
-oauth_redirect_uri = []
-
-
-def gen_code(uri):
-    code = random.randint(0, 10000)
-    auth_code[uri] = code
-    return code
-
-
 @app.route('/client/login', methods=['POST', 'GET'])
 def client_login():
     uri = 'http://127.0.0.1:5000/oauth?response_type=code&client_id=%s&redirect_uri=%s' % (client_id, redirect_uri)
@@ -191,16 +209,33 @@ def client_login():
 
 @app.route('/oauth', methods=['POST', 'GET'])
 def oauth():
-    if request.args.get('user'):
-        if users.get(request.args.get('user'))[0] == request.args.get('pw') and oauth_redirect_uri:
-            uri = oauth_redirect_uri[0] + '?code=%s' % gen_code(oauth_redirect_uri[0])
-            return redirect(uri)
+    if request.method == 'POST' and request.form['user']:
+        u = request.form['user']
+        p = request.form['pw']
+        if users.get(u)[0] == p and oauth_redirect_uri:
+            uri = oauth_redirect_uri[0] + '?code=%s' % gen_code(oauth_redirect_uri[0], u)
+            expire_date = datetime.now() + timedelta(minutes=1)
+            resp = make_response(redirect(uri))
+            resp.set_cookie('login', '_'.join([u, p]), expires=expire_date)
+            return resp
     if request.args.get('code'):
-        if str(auth_code.get(request.args.get('redirect_uri'))) == request.args.get('code'):
-            return gen_token(request.args.get('client_id'))
+        auth_info = auth_code.get(request.args.get('redirect_uri'))
+        if str(auth_info[0]) == request.args.get('code'):
+            return gen_token(dict(client_id=request.args.get('client_id'), user_id=auth_info[1]))
     if request.args.get('redirect_uri'):
         oauth_redirect_uri.append(request.args.get('redirect_uri'))
-    return 'Please login'
+        if request.cookies.get('login'):
+            u, p = request.cookies.get('login').split('_')
+            if users.get(u)[0] == p:
+                uri = oauth_redirect_uri[0] + '?code=%s' % gen_code(oauth_redirect_uri[0], u)
+                return redirect(uri)
+        return '''
+            <form method='post'>
+                <p><input type='text' name='user'></p>
+                <p><input type='password' name='pw'></p>
+                <p><input type='submit' value='login'></p>
+            </form>
+        '''
 
 
 @app.route('/client/passport', methods=['POST', 'GET'])
@@ -209,6 +244,16 @@ def passport():
     uri = 'http://127.0.0.1:5000/oauth?grant_type=authorization_code&code=%s&redirect_uri=%s&client_id=%s' % (
         code, redirect_uri, client_id)
     return redirect(uri)
+
+
+@app.route('/test', methods=['POST', 'GET'])
+def test():
+    token = request.args.get('token')
+    ret = verify_token(token)
+    if ret:
+        return json.dumps(ret)
+    else:
+        return 'error'
 
 
 @app.errorhandler(404)
