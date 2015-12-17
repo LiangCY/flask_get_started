@@ -78,7 +78,7 @@ def login():
     my_form = LoginForm(request.form)
     if request.method == 'POST':
         if my_form.validate():
-            user = User(my_form.username.data, my_form.password.data);
+            user = User(my_form.username.data, my_form.password.data)
             if user.is_existed() == 1:
                 return 'Login success!'
             else:
