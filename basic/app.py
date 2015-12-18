@@ -260,15 +260,6 @@ def test():
         return 'error'
 
 
-# 数据模型
-class TestData(object):
-    def __init__(self, client_id, expires, salt, user_id):
-        self.client_id = client_id
-        self.expires = expires
-        self.salt = salt
-        self.user_id = user_id
-
-
 # marshal
 resource_fields = {
     'user': fields.String(attribute='sender', default=''),
