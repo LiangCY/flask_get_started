@@ -1,12 +1,19 @@
 from app import app
-from flask import render_template
+from flask import render_template, request
 from models import Todo
 
 
 @app.route('/')
 def index():
-    print('123')
     todos = Todo.objects.all()
+    return render_template('index.html', todos=todos)
 
-    print(todos)
+
+@app.route('/add', methods=['POST'])
+def add():
+    form = request.form
+    content = form['content']
+    todo = Todo(content=content)
+    todo.save()
+    todos = Todo.objects.all()
     return render_template('index.html', todos=todos)
