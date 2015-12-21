@@ -5,3 +5,5 @@ MONGODB_SETTINGS = {
     'username': 'lcy',
     'password': 'lcy'
 }
+
+WTF_CSRF_ENABLED = False
