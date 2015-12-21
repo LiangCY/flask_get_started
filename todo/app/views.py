@@ -39,3 +39,12 @@ def undone(todo_id):
     todo.save()
     todos = Todo.objects.all()
     return render_template('index.html', todos=todos, form=form)
+
+
+@app.route('/delete/<string:todo_id>')
+def delete(todo_id):
+    form = TodoForm()
+    todo = Todo.objects.get_or_404(id=todo_id)
+    todo.delete()
+    todos = Todo.objects.all()
+    return render_template('index.html', todos=todos, form=form)

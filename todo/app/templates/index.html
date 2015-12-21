@@ -12,37 +12,42 @@
     {% endfor %}
     <div>
         <h2>Todo List</h2>
-        <table class="table">
-            <thead>
-            <tr>
-                <th>Content</th>
-                <th>Status</th>
-                <th>Time</th>
-                <th>Operation</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for todo in todos %}
+        {% if todos %}
+            <table class="table">
+                <thead>
                 <tr>
-                    <td>{{ todo.content }}</td>
-                    <td>
-                        {% if todo.status == 1 %}
-                            已完成
-                        {% else %}
-                            未完成
-                        {% endif %}
-                    </td>
-                    <td>{{ todo.time }}</td>
-                    <td>
-                        {% if todo.status == 0 %}
-                            <a href="/done/{{ todo.id }}" class="btn btn-primary">Done</a>
-                        {% else %}
-                            <a href="/undone/{{ todo.id }}" class="btn btn-success">Undone</a>
-                        {% endif %}
-                    </td>
+                    <th>Content</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                    <th>Operation</th>
                 </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                {% for todo in todos %}
+                    <tr>
+                        <td>{{ todo.content }}</td>
+                        <td>
+                            {% if todo.status == 1 %}
+                                已完成
+                            {% else %}
+                                未完成
+                            {% endif %}
+                        </td>
+                        <td>{{ todo.time }}</td>
+                        <td>
+                            {% if todo.status == 0 %}
+                                <a href="/done/{{ todo.id }}" class="btn btn-primary">Done</a>
+                            {% else %}
+                                <a href="/undone/{{ todo.id }}" class="btn btn-success">Undone</a>
+                            {% endif %}
+                            <a href="/delete/{{ todo.id }}" class="btn btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <h3 class="text-info">No todos.</h3>
+        {% endif %}
     </div>
 {% endblock %}
