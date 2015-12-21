@@ -18,6 +18,7 @@
                 <th>Content</th>
                 <th>Status</th>
                 <th>Time</th>
+                <th>Operation</th>
             </tr>
             </thead>
             <tbody>
@@ -32,6 +33,13 @@
                         {% endif %}
                     </td>
                     <td>{{ todo.time }}</td>
+                    <td>
+                        {% if todo.status == 0 %}
+                            <a href="/done/{{ todo.id }}" class="btn btn-primary">Done</a>
+                        {% else %}
+                            <a href="/undone/{{ todo.id }}" class="btn btn-success">Undone</a>
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
             </tbody>
