@@ -7,7 +7,7 @@ from datetime import datetime
 @app.route('/')
 def index():
     form = TodoForm()
-    todos = Todo.objects.all()
+    todos = Todo.objects.order_by('-time')
     return render_template('index.html', todos=todos, form=form)
 
 
