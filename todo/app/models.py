@@ -1,5 +1,4 @@
 import datetime
-
 from app import db
 from flask.ext.mongoengine.wtf import model_form
 
