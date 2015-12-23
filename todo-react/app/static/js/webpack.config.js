@@ -6,12 +6,15 @@ module.exports = {
         path: "./build",
         filename: "bundle.js"
     },
-    modules: {
+    module: {
         loaders: [
             {
                 test: /\.jsx?$/,
                 exclude: /node_modules/,
-                loader: 'babel'
+                loader: 'babel',
+                query: {
+                    presets: ['react']
+                }
             }
         ]
     }

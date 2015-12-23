@@ -4,12 +4,13 @@ from app.models import Todo
 from datetime import datetime
 
 
-@app.router('/')
+@app.route('/')
 def index():
-    render_template('index.html')
+    print('123')
+    return render_template('index.html')
 
 
-@app.router('/add', methods=['POST'])
+@app.route('/add', methods=['POST'])
 def add():
     form = request.form
     content = form.get('content')
@@ -18,7 +19,7 @@ def add():
     return jsonify(status='success')
 
 
-@app.router('/delete/<string:todo_id>')
+@app.route('/delete/<string:todo_id>')
 def delete(todo_id):
     todo = Todo.objects.get_or_404(id=todo_id)
     todo.delete()
