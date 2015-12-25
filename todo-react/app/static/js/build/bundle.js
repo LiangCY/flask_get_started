@@ -19672,7 +19672,14 @@
 	            data: { content: content }
 	        }).done((function (resp) {
 	            if (resp.status == 'success') {
-	                this.listTodo();
+	                var todos = [];
+	                todos.push(resp.todo);
+	                this.state.todos.forEach(function (todo) {
+	                    todos.push(todo);
+	                });
+	                this.setState({
+	                    todos: todos
+	                });
 	            }
 	        }).bind(this));
 	    },
@@ -19683,7 +19690,16 @@
 	            data: { id: id, status: status }
 	        }).done((function (resp) {
 	            if (resp.status == 'success') {
-	                this.listTodo();
+	                var todos = [];
+	                this.state.todos.forEach(function (todo) {
+	                    if (todo.id == resp.id) {
+	                        todo.status = resp.status;
+	                    }
+	                    todos.push(todo);
+	                });
+	                this.setState({
+	                    todos: todos
+	                });
 	            }
 	        }).bind(this));
 	    },
@@ -19692,7 +19708,15 @@
 	            url: '/delete/' + id
 	        }).done((function (resp) {
 	            if (resp.status == 'success') {
-	                this.listTodo();
+	                var todos = [];
+	                this.state.todos.forEach(function (todo) {
+	                    if (todo.id != resp.id) {
+	                        todos.push(todo);
+	                    }
+	                });
+	                this.setState({
+	                    todos: todos
+	                });
 	            }
 	        }).bind(this));
 	    },

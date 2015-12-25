@@ -2,7 +2,6 @@ var React = require('react');
 
 var TodoItem = React.createClass({
     handleUpdate: function (id, status) {
-        console.log(id, status);
         this.props.updateTodo(id, status);
     },
     handleDelete: function (id) {

@@ -16,14 +16,14 @@ def add():
     content = form.get('content')
     todo = Todo(content=content, time=datetime.now())
     todo.save()
-    return jsonify(status='success')
+    return jsonify(status='success', todo=todo.to_json())
 
 
 @app.route('/delete/<string:todo_id>')
 def delete(todo_id):
     todo = Todo.objects.get_or_404(id=todo_id)
     todo.delete()
-    return jsonify(status='success')
+    return jsonify(status='success', id=str(todo.id))
 
 
 @app.route('/update', methods=['POST'])
@@ -34,7 +34,7 @@ def update():
     todo = Todo.objects.get_or_404(id=todo_id)
     todo.status = status
     todo.save()
-    return jsonify(status='success')
+    return jsonify(status='success', id=str(todo.id), todo_status=todo.status)
 
 
 @app.route('/list')
