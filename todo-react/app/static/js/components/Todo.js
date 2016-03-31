@@ -48,7 +48,7 @@ var Todo = React.createClass({
                 var todos = [];
                 this.state.todos.forEach(function (todo) {
                     if (todo.id == resp.id) {
-                        todo.status = resp.status;
+                        todo.status = resp.todo_status;
                     }
                     todos.push(todo);
                 });

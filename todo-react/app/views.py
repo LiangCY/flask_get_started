@@ -6,7 +6,6 @@ from datetime import datetime
 
 @app.route('/')
 def index():
-    print('123')
     return render_template('index.html')
 
 
